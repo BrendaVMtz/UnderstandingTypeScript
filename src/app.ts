@@ -1,203 +1,111 @@
-function Logger(logString: string) {
-  //   console.log("LOGGER FACTORY");
-  return function (algo: Function) {
-    console.log(logString);
-    console.log(algo);
-  };
+//// Here's the Validation interface ~
+interface Validatable {
+  value: string | number;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
 }
 
-/////////////////
-function WithTemplate(template: string, hookId: string) {
-  console.log("TEMPLATE FACTORY");
-  return function <T extends { new (...args: any[]): { name: string } }>(
-    originalConstructor: T
-  ) {
-    return class extends originalConstructor {
-      constructor(..._: any[]) {
-        super();
-        console.log("Rendering Template");
-        const hookEl = document.getElementById(hookId);
-        if (hookEl) {
-          hookEl.innerHTML = template;
-          hookEl.querySelector("h1")!.textContent = this.name;
-        }
-      }
-    };
-  };
+function validate(validatableInput: Validatable){
+   let isValid = true;
+   if (validatableInput.required){
+        isValid = isValid && validatableInput.value.trim().length
+   }
 }
 
-@Logger("Logging person")
-@WithTemplate("<h1>My Person Object</h1>", "app")
-class Person1 {
-  name = "Max";
-  constructor() {
-    // console.log("Creating a new person...");
-  }
-}
-
-const pers = new Person1();
-console.log(pers);
-
-/////////////////////////////
-
-function Log(target: any, propertyName: string | Symbol) {
-  console.log("Property decorator!");
-  console.log(target, propertyName);
-}
-
-function Log2(target: any, name: string, descriptor: PropertyDescriptor) {
-  console.log("Accessor decorator!");
-  console.log(target);
-  console.log(name);
-  console.log(descriptor);
-}
-
-function Log3(
-  target: any,
-  name: string | Symbol,
-  descriptor: PropertyDescriptor
-) {
-  console.log("Method decorator!");
-  console.log(target);
-  console.log(name);
-  console.log(descriptor);
-}
-
-function Log4(target: any, name: string | Symbol, position: number) {
-  console.log("Parameter decorator!");
-  console.log(target);
-  console.log(name);
-  console.log(position);
-}
-
-class Product {
-  @Log
-  title: string;
-  private _price: number;
-
-  @Log2
-  set price(val: number) {
-    if (val > 0) {
-      this._price = val;
-    } else {
-      throw new Error("Invalid price - should be positive!");
-    }
-  }
-
-  constructor(t: string, p: number) {
-    this.title = t;
-    this._price = p;
-  }
-
-  @Log3
-  getPriceWithTax(@Log4 tax: number) {
-    return this._price * (1 + tax);
-  }
-}
-
-const p1 = new Product("Book", 19);
-const p2 = new Product("Book 2", 29);
-
+//// Here's the Autobind decorator ~
 function Autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
   const originalMethod = descriptor.value;
   const adjDescriptor: PropertyDescriptor = {
     configurable: true,
-    enumerable: false,
     get() {
-      const boundFn = originalMethod.bind(this);
-      return boundFn;
+      const boundFunct = originalMethod.bind(this);
+      return boundFunct;
     },
   };
   return adjDescriptor;
 }
 
-class Printer {
-  message = "This works!";
+//// Here's the Project input class ~
+class PorjectInput {
+  templateElement: HTMLTemplateElement;
+  hostElement: HTMLDivElement;
+  element: HTMLFormElement;
+  tittleInputElement: HTMLInputElement;
+  descrptionInputElement: HTMLInputElement;
+  peopleInputElement: HTMLInputElement;
 
-  @Autobind
-  showMessage() {
-    console.log(this.message);
+  constructor() {
+    this.templateElement = document.getElementById(
+      "project-input"
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById("app")! as HTMLDivElement;
+
+    const importedNode = document.importNode(
+      this.templateElement.content,
+      true
+    );
+    this.element = importedNode.firstElementChild as HTMLFormElement;
+    this.element.id = "user-input";
+
+    this.tittleInputElement = this.element.querySelector(
+      "#title"
+    ) as HTMLInputElement;
+    this.descrptionInputElement = this.element.querySelector(
+      "#description"
+    ) as HTMLInputElement;
+    this.peopleInputElement = this.element.querySelector(
+      "#people"
+    ) as HTMLInputElement;
+
+    this.configure();
+    this.attach();
   }
-}
 
-const p = new Printer();
-//   p.showMessage();
-
-const button = document.querySelector("button")!;
-button.addEventListener("click", p.showMessage.bind(p)); //apunta al evento
-
-// ---------------------------
-
-interface ValidatorConfig {
-  [property: string]: {
-    [validatableProp: string]: string[]; // ['required', 'positive']
-  };
-}
-
-const registeredValidators: ValidatorConfig = {};
-
-function Required(target: any, propName: string) {
-  registeredValidators[target.constructor.name] = {
-    ...registeredValidators[target.constructor.name],
-    [propName]: ["required"],
-  };
-}
-
-function PositiveNumber(target: any, propName: string) {
-  registeredValidators[target.constructor.name] = {
-    ...registeredValidators[target.constructor.name],
-    [propName]: ["positive"],
-  };
-}
-
-function validate(obj: any) {
-  const objValidatorConfig = registeredValidators[obj.constructor.name];
-  if (!objValidatorConfig) {
-    return true;
-  }
-  let isValid = true;
-  for (const prop in objValidatorConfig) {
-    for (const validator of objValidatorConfig[prop]) {
-      switch (validator) {
-        case "required":
-          isValid = isValid && !!obj[prop];
-          break;
-        case "positive":
-          isValid = isValid && obj[prop] > 0;
-
-          break;
-      }
+  private gatherInput(): [string, string, number] | void {
+    const enteredTitle = this.tittleInputElement.value;
+    const enteredDescription = this.descrptionInputElement.value;
+    const enteredPeople = this.peopleInputElement.value;
+    console.log(this.peopleInputElement.value);
+    if (
+      enteredTitle.trim().length === 0 ||
+      enteredDescription.trim().length === 0 ||
+      enteredPeople.trim().length === 0
+    ) {
+      alert("No");
+      return;
+    } else {
+      return [enteredTitle, enteredDescription, +enteredPeople];
     }
   }
-  return isValid;
-}
 
-class Course {
-  @Required
-  title: string;
-  @PositiveNumber
-  price: number;
+  private clearInputs() {
+    this.tittleInputElement.value = "";
+    this.descrptionInputElement.value = "";
+    this.peopleInputElement.value = "";
+  }
 
-  constructor(t: string, p: number) {
-    this.title = t;
-    this.price = p;
+  @Autobind
+  private submitHandler(event: Event) {
+    event.preventDefault();
+    const userInput = this.gatherInput();
+    if (Array.isArray(userInput)) {
+      const [tittle, desc, people] = userInput;
+      console.log(tittle, desc, people);
+      this.clearInputs();
+    }
+  }
+
+  private configure() {
+    this.element.addEventListener("submit", this.submitHandler);
+  }
+
+  private attach() {
+    this.hostElement.insertAdjacentElement("afterbegin", this.element);
   }
 }
 
-const courseForm = document.querySelector("form")!;
-courseForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const titleEl = document.getElementById("title") as HTMLInputElement;
-  const priceEl = document.getElementById("price") as HTMLInputElement;
-
-  const title = titleEl.value;
-  const price = +priceEl.value;
-
-  const createdCourse = new Course(title, price);
-
-  if (!validate(createdCourse)) {
-    alert("Invalid input, please try again!");
-    return;
-  }
-  console.log(createdCourse);
-});
+const newPrj = new PorjectInput();
+// const newPrj2 = new PorjectInput();
