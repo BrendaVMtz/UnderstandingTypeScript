@@ -1,2 +1,3 @@
-node_modules
-dist
+TypescriptTheCompleteDevelopersGuide\node_modules
+ReactMUI\mui-react-tutorial\node_modules
+api\PokeAPI\node_modules
