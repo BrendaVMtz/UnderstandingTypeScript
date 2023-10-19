@@ -1,9 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/TypescriptTheCompleteDevelopersGuide/intro/node_modules
-TypescriptTheCompleteDevelopersGuide/maps/node_modules
-
 # Logs
 logs
 *.log
